@@ -6,7 +6,7 @@ const app = express();
 
 mongoose
   .connect(
-    `mongodb+srv://fullstack:12345@cluster0.ssypy.mongodb.net/reblogs?retryWrites=true&w=majority`,
+    process.env.DATABASE_URL,
     {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -18,7 +18,7 @@ mongoose
     console.log("connected to database");
   });
 
-app.use(cors);
-app.use(express.json);
+app.use(cors());
+app.use(express.json());
 app.use("/", blogsRouter);
 module.exports = app;
