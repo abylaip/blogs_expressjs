@@ -14,7 +14,7 @@ blogsRouter.get("/api/blogs/:id", async (request, response) => {
   try {
     const blog = await Blog.findById(request.params.id);
     if (blog) {
-      reponse.json(blog);
+      response.json(blog);
     } else {
       response.status(404).end();
     }
@@ -30,6 +30,8 @@ blogsRouter.post("/api/blogs", async (request, response) => {
     title: body.title,
     content: body.content,
     author: body.author,
+    likes: body.likes,
+    activity: body.activity,
     createdAt: new Date(),
     updatedAt: new Date(),
   });
@@ -39,8 +41,8 @@ blogsRouter.post("/api/blogs", async (request, response) => {
 
 blogsRouter.delete("/api/blogs/:id", async (request, response) => {
   try {
-    const blog = await Blog.findByIdAndRemove(request.params.id);
-    reponse.status(200).end();
+    await Blog.findByIdAndRemove(request.params.id);
+    response.status(204).end();
   } catch (error) {
     console.log("error: ", error);
   }
@@ -50,15 +52,13 @@ blogsRouter.put("/api/blogs/:id", async (request, response) => {
   const body = request.body;
 
   const blog = {
-    title: body.title,
-    content: body.content,
     author: body.author,
     updatedAt: new Date(),
   };
   const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, {
     new: true,
   });
-  response.status(updatedBlog);
+  response.json(updatedBlog);
 });
 
 module.exports = blogsRouter;
