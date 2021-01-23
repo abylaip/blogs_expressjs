@@ -14,7 +14,13 @@ const blogSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  date: Date,
+  createdAt: {
+    type: Date,
+    required: true,
+  },
+  updatedAt: {
+    type: Date,
+  },
 });
 
 blogSchema.set("toJSON", {
