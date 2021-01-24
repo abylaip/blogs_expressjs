@@ -51,14 +51,46 @@ blogsRouter.delete("/api/blogs/:id", async (request, response) => {
 blogsRouter.put("/api/blogs/:id", async (request, response) => {
   const body = request.body;
 
-  const blog = {
-    author: body.author,
-    updatedAt: new Date(),
-  };
-  const updatedBlog = await Blog.findByIdAndUpdate(request.params.id, blog, {
-    new: true,
-  });
-  response.json(updatedBlog);
+  if (body.title) {
+    const updateTitle = {
+      title: body.title,
+      updatedAt: new Date(),
+    };
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      request.params.id,
+      updateTitle,
+      {
+        new: true,
+      }
+    );
+    response.json(updatedBlog);
+  } else if (body.content) {
+    const updateContent = {
+      content: body.content,
+      updatedAt: body.updatedAt,
+    };
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      request.params.id,
+      updateContent,
+      {
+        new: true,
+      }
+    );
+    response.json(updatedBlog);
+  } else if (body.author) {
+    const updateAuthor = {
+      author: body.author,
+      updatedAt: new Date(),
+    };
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      request.params.id,
+      updateAuthor,
+      {
+        new: true,
+      }
+    );
+    response.json(updatedBlog);
+  }
 });
 
 module.exports = blogsRouter;
