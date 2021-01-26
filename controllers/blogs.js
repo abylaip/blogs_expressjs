@@ -2,15 +2,13 @@ const blogsRouter = require("express").Router();
 const Blog = require("../models/blog");
 
 blogsRouter.get("/", async (request, response) => {
-  response.json({ status: "ok" });
-});
-
-blogsRouter.get("/api/blogs", async (request, response) => {
-  const blog = await Blog.find({});
+  const blog = await Blog.find({ createdBy: request.user._id }).populate(
+    "createdBy"
+  );
   response.json(blog);
 });
 
-blogsRouter.get("/api/blogs/:id", async (request, response) => {
+blogsRouter.get("/:id", async (request, response) => {
   try {
     const blog = await Blog.findById(request.params.id);
     if (blog) {
@@ -23,9 +21,10 @@ blogsRouter.get("/api/blogs/:id", async (request, response) => {
   }
 });
 
-blogsRouter.post("/api/blogs", async (request, response) => {
+blogsRouter.post("/", async (request, response) => {
   const body = request.body;
 
+  const { user } = request;
   const blog = new Blog({
     title: body.title,
     content: body.content,
@@ -34,12 +33,13 @@ blogsRouter.post("/api/blogs", async (request, response) => {
     activity: body.activity,
     createdAt: new Date(),
     updatedAt: new Date(),
+    createdBy: user._id,
   });
   const savedBlog = await blog.save();
   response.json(savedBlog);
 });
 
-blogsRouter.delete("/api/blogs/:id", async (request, response) => {
+blogsRouter.delete("/:id", async (request, response) => {
   try {
     await Blog.findByIdAndRemove(request.params.id);
     response.status(204).end();
@@ -48,49 +48,19 @@ blogsRouter.delete("/api/blogs/:id", async (request, response) => {
   }
 });
 
-blogsRouter.put("/api/blogs/:id", async (request, response) => {
-  const body = request.body;
+blogsRouter.put("/:id", async (request, response, next) => {
+  const { body } = request;
 
-  if (body.title) {
-    const updateTitle = {
-      title: body.title,
-      updatedAt: new Date(),
-    };
-    const updatedBlog = await Blog.findByIdAndUpdate(
-      request.params.id,
-      updateTitle,
-      {
-        new: true,
-      }
-    );
-    response.json(updatedBlog);
-  } else if (body.content) {
-    const updateContent = {
-      content: body.content,
-      updatedAt: body.updatedAt,
-    };
-    const updatedBlog = await Blog.findByIdAndUpdate(
-      request.params.id,
-      updateContent,
-      {
-        new: true,
-      }
-    );
-    response.json(updatedBlog);
-  } else if (body.author) {
-    const updateAuthor = {
-      author: body.author,
-      updatedAt: new Date(),
-    };
-    const updatedBlog = await Blog.findByIdAndUpdate(
-      request.params.id,
-      updateAuthor,
-      {
-        new: true,
-      }
-    );
-    response.json(updatedBlog);
+  const blog = await Blog.findById(request.params.id);
+
+  if (!blog) {
+    next(new Error("Object not found!"));
+    return;
   }
+
+  blog.set(body);
+  await blog.save();
+  response.json(blog);
 });
 
 module.exports = blogsRouter;

@@ -30,6 +30,10 @@ const blogSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
   },
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+  },
 });
 
 blogSchema.set("toJSON", {
