@@ -2,58 +2,76 @@ const bcrypt = require("bcrypt");
 const usersRouter = require("express").Router();
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
 
-usersRouter.get("/", async (request, response) => {
-  const users = await User.find({});
-  response.json(users);
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads");
+  },
+
+  filename: function (req, file, cb) {
+    cb(null, new Date().toISOString() + file.originalname);
+  },
 });
 
-usersRouter.post("/", async (request, response) => {
+usersRouter.get("/info", async (request, response, next) => {
+  response.json(request.user);
+});
+var upload = multer({ storage: storage });
+usersRouter.put(
+  "/:id",
+  upload.single("avatar"),
+  async (request, response, next) => {
+    const { body } = request;
+
+    const user = await User.findById(request.params.id);
+
+    if (!user) {
+      next(new Error("Object not found!"));
+      return;
+    }
+    const file = req.file;
+    if (!file) {
+      const error = new Error("Please upload a file");
+      error.httpStatusCode = 400;
+      return next("hey error");
+    }
+    user.avatar = file.path;
+    user.set(body);
+    await user.save();
+    response.json(user);
+  }
+);
+
+usersRouter.put("/password/:id", async (request, response, next) => {
   const { body } = request;
 
+  const user = await User.findById(request.params.id);
+
+  if (!user) {
+    next(new Error("Object not found!"));
+    return;
+  }
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(body.password, saltRounds);
-
-  const user = new User({
-    ...body,
-    password: passwordHash,
-  });
+  body.password = passwordHash;
+  user.set(body);
   await user.save();
   response.json(user);
 });
 
-usersRouter.post("/login", async (request, response, next) => {
-  const { body } = request;
-
-  const user = await User.findOne({ username: body.username });
-  if (!user) {
-    next(new Error("User not found!"));
-    return;
-  }
-  const passwordCorrect =
-    user === null ? false : await bcrypt.compare(body.password, user.password);
-  if (passwordCorrect) {
-    const tokenData = {
-      username: user.username,
-      id: user._id,
-      now: new Date(),
-    };
-    const token = jwt.sign(tokenData, process.env.SECRET);
-    user.token = token;
-    await user.save();
-    response.json({ token });
-  } else {
-    response.status(401).json({ error: "Wrong password!" });
-  }
-});
+// usersRouter.get("/info/:id", async (request, reponse, next) => {
+//   try {
+//     const user = await User.findById(request.params.id);
+//     if (user) {
+//       response.json(user);
+//     } else {
+//       response.status(404).end();
+//     }
+//   } catch (error) {
+//     response.json("error", error);
+//   }
+// });
 
 module.exports = usersRouter;
-
-//   const token = jwt.sign(userForToken, process.env.SECRET)
-
-//   response
-//     .status(200)
-//     .send({ token, username: user.username, name: user.name })
-// })
-
-// module.exports = loginRouter

@@ -1,6 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const blogsRouter = require("./controllers/blogs");
+const multer = require("multer");
+const path = require("path");
+const ideasRouter = require("./controllers/ideas");
+const loginRouter = require("./controllers/login");
 const usersRouter = require("./controllers/users");
 const authRouter = require("./controllers/auth");
 const cors = require("cors");
@@ -19,7 +22,8 @@ mongoose
 
 app.use(cors());
 app.use(express.json());
-app.use("/api/users", usersRouter);
+app.use("/api/auth", loginRouter);
 app.use(authRouter);
-app.use("/api/blogs", blogsRouter);
+app.use("/api/users", express.static(__dirname + "/:id"), usersRouter);
+app.use("/api/ideas", ideasRouter);
 module.exports = app;
